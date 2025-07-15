@@ -119,6 +119,12 @@ func (cpc *CloudProviderConfig) Generate(ctx context.Context, dependencies asset
 		// Note that the newline is required in order to be valid yaml.
 		cm.Data[cloudProviderConfigDataKey] = `[Global]
 `
+		if installConfig.Config.IsSingleStackIpv6() || installConfig.Config.IsDualStack() {
+			cm.Data[cloudProviderConfigDataKey] = `[Global]
+NodeIPFamilies=ipv6
+NodeIPFamilies=ipv4
+`
+		}
 	case openstacktypes.Name:
 		cloudProviderConfigData, cloudProviderConfigCABundleData, err := openstackmanifests.GenerateCloudProviderConfig(ctx, *installConfig.Config)
 		if err != nil {

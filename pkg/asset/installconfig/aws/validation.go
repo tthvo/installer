@@ -15,14 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apimachinery/pkg/util/validation/field"
-
 	"github.com/openshift/installer/pkg/rhcos"
 	"github.com/openshift/installer/pkg/types"
 	awstypes "github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/dns"
+	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	utilnet "k8s.io/utils/net"
 )
 
 type resourceRequirements struct {
@@ -519,19 +519,31 @@ func validateSubnetCIDR(fldPath *field.Path, subnetDataGroup map[string]subnetDa
 	allErrs := field.ErrorList{}
 	for id, subnetData := range subnetDataGroup {
 		fp := fldPath.Index(subnetData.Idx)
+		// IPv4
 		cidr, _, err := net.ParseCIDR(subnetData.CIDR)
 		if err != nil {
 			allErrs = append(allErrs, field.Invalid(fp, id, err.Error()))
 			continue
 		}
-		allErrs = append(allErrs, validateMachineNetworksContainIP(fp, networks, id, cidr)...)
+		// IPv6
+		// TODO: Check the association state first
+		cidripv6, _, err := net.ParseCIDR(*subnetData.IPv6CIDRAssociation.Ipv6CidrBlock)
+		if err != nil {
+			allErrs = append(allErrs, field.Invalid(fp, id, err.Error()))
+			continue
+		}
+
+		allErrs = append(allErrs, validateMachineNetworksContainIP(fp, networks, id, cidr, cidripv6)...)
 	}
 	return allErrs
 }
 
-func validateMachineNetworksContainIP(fldPath *field.Path, networks []types.MachineNetworkEntry, subnetName string, ip net.IP) field.ErrorList {
+func validateMachineNetworksContainIP(fldPath *field.Path, networks []types.MachineNetworkEntry, subnetName string, ip net.IP, ip6 net.IP) field.ErrorList {
 	for _, network := range networks {
-		if network.CIDR.Contains(ip) {
+		if utilnet.IsIPv6CIDRString(network.CIDR.String()) && network.CIDR.Contains(ip6) {
+			return nil
+		}
+		if utilnet.IsIPv4CIDRString(network.CIDR.String()) && network.CIDR.Contains(ip) {
 			return nil
 		}
 	}

@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/sets"
-
 	configv1 "github.com/openshift/api/config/v1"
 	features "github.com/openshift/api/features"
 	"github.com/openshift/installer/pkg/ipnet"
@@ -24,6 +20,10 @@ import (
 	"github.com/openshift/installer/pkg/types/ovirt"
 	"github.com/openshift/installer/pkg/types/powervs"
 	"github.com/openshift/installer/pkg/types/vsphere"
+	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
+	utilnet "k8s.io/utils/net"
 )
 
 const (
@@ -645,4 +645,43 @@ func (c *InstallConfig) PublicIngress() bool {
 		return true
 	}
 	return false
+}
+
+// InfraStack represents whether a cluster is running on a
+// single IPv4, single IPv6 or dualstack network infrastructure.
+type InfraStack string
+
+const (
+	SingleStackIPv4 InfraStack = "singlestack-ipv4"
+	SingleStackIPv6 InfraStack = "singlestack-ipv6"
+	DualStack       InfraStack = "dualstack"
+)
+
+// InfraStack returns the network stack of the cluster infrastructure.
+// One of singletack-ipv4, singlestack-ipv6, and dualstack.
+func (c *InstallConfig) InfraStack() InfraStack {
+	hasIPv4, hasIPv6 := false, false
+	for _, machineNetwork := range c.MachineNetwork {
+		if utilnet.IsIPv4CIDRString(machineNetwork.CIDR.String()) {
+			hasIPv4 = true
+		} else if utilnet.IsIPv6CIDRString(machineNetwork.CIDR.String()) {
+			hasIPv6 = true
+		}
+	}
+
+	if hasIPv4 && hasIPv6 {
+		return DualStack
+	}
+	if hasIPv6 {
+		return SingleStackIPv6
+	}
+	return SingleStackIPv4
+}
+
+func (c *InstallConfig) IsSingleStackIpv6() bool {
+	return c.InfraStack() == SingleStackIPv6
+}
+
+func (c *InstallConfig) IsDualStack() bool {
+	return c.InfraStack() == DualStack
 }
