@@ -293,6 +293,11 @@ func getPartitionDNSSuffix(region string) string {
 		domain = strings.Join(parts[2:], ".")
 	}
 
+	// EUS partition uses amazonaws.com suffix
+	if strings.HasSuffix(domain, ".eu") {
+		domain = "amazonaws.com"
+	}
+
 	logrus.Debugf("Using domain name: %s", domain)
 	return fmt.Sprintf("ec2.%s", domain)
 }
