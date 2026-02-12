@@ -365,6 +365,8 @@ func (o *ClusterUninstaller) RunWithContext(ctx context.Context) ([]string, erro
 			}
 			tagClients = append(tagClients, tagClient)
 		}
+	// EUS partition
+	case "eusc-de-east-1":
 	default:
 		if o.Region != endpointUSEast1 {
 			tagClient, err := createResourceTaggingClient(endpointUSEast1, o.endpoints)
