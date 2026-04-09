@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -107,6 +108,9 @@ func runRootCmd(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logrus.Fatal(errors.Wrap(err, "invalid log-level"))
 	}
+
+	// Log the command being executed
+	logrus.Debugf("Executing: %s", strings.Join(os.Args, " "))
 }
 
 // handleInterrupt executes a graceful shutdown then exits in
