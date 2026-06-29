@@ -41,12 +41,5 @@ func validateMachinePoolFeatureGates(c *types.InstallConfig) []featuregates.Gate
 			Condition:       c.OSImageStream != rhcos.GetDefaultOSImageStream(c),
 			Field:           field.NewPath("osImageStream"),
 		},
-		{
-			// Note that this should use a platform-specific feature gate, but
-			// there is no way to express that here.
-			FeatureGateName: features.FeatureGateClusterAPIMachineManagement,
-			Condition:       len(c.Compute) > 0 && c.Compute[0].Management == types.ClusterAPI,
-			Field:           field.NewPath("compute", "management"),
-		},
 	}
 }

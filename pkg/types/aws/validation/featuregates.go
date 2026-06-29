@@ -30,6 +30,11 @@ func GatedFeatures(c *types.InstallConfig) []featuregates.GatedInstallConfigFeat
 			Condition:       strings.HasPrefix(c.AWS.Region, "eusc-"),
 			Field:           field.NewPath("platform", "aws", "region"),
 		},
+		{
+			FeatureGateName: features.FeatureGateClusterAPIMachineManagementAWS,
+			Condition:       len(c.Compute) > 0 && c.Compute[0].Management == types.ClusterAPI,
+			Field:           field.NewPath("compute").Index(0).Child("management"),
+		},
 	}
 
 	// Check if any compute pool has dedicated hosts configured

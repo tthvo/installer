@@ -899,9 +899,6 @@ func validateCompute(platform *types.Platform, control *types.MachinePool, pools
 		case types.MachinePoolComputeRoleName:
 		case types.MachinePoolEdgeRoleName:
 			allErrs = append(allErrs, validateComputeEdge(platform, p.Name, poolFldPath, poolFldPath)...)
-			if p.Management == types.ClusterAPI {
-				allErrs = append(allErrs, field.Invalid(poolFldPath.Child("management"), p.Management, "edge compute pools cannot be managed by Cluster API"))
-			}
 		default:
 			allErrs = append(allErrs, field.NotSupported(poolFldPath.Child("name"), p.Name, []string{types.MachinePoolComputeRoleName, types.MachinePoolEdgeRoleName}))
 		}
@@ -1674,6 +1671,25 @@ func validateGatedFeatures(c *types.InstallConfig) field.ErrorList {
 		fgCheck(gf)
 	}
 
+	return allErrs
+}
+
+func validateMachineManagement(platform *types.Platform, p *types.MachinePool, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	if p.Management != types.ClusterAPI {
+		return allErrs
+	}
+
+	switch platform.Name() {
+	case aws.Name:
+		// ATM, ClusterAPI management is only supported for worker compute pool
+		if p.Name == types.MachinePoolControlPlaneRoleName || p.Name == types.MachinePoolEdgeRoleName {
+			allErrs = append(allErrs, field.Invalid(fldPath, p.Management, fmt.Sprintf("%s machines cannot be managed by Cluster API", p.Name)))
+		}
+	default:
+		allErrs = append(allErrs, field.Invalid(fldPath, p.Management, fmt.Sprintf("machines cannot be managed by Cluster API for platform %s", platform.Name())))
+	}
 	return allErrs
 }
 
