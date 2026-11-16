@@ -23,7 +23,7 @@ func knownPublicRegions(architecture types.Architecture, osImageStream types.OSI
 		// Pass the default region (used for survey purposes) as the region here.
 		// Without a region, the DescribeRegions call will fail immediately.
 		// At this point, custom endpoints are unknown as they are not yet configured.
-		Region: "us-east-1",
+		Region: "me-west-1",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create EC2 client: %w", err)

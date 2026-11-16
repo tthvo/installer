@@ -834,6 +834,10 @@
               "release": "10.2.20261108-0",
               "image": "ami-0e60fcf2ed0224033"
             },
+            "me-west-1": {
+              "release": "10.2.20261108-0",
+              "image": "ami-0ee28b0d8c17b656f"
+            },
             "sa-east-1": {
               "release": "10.2.20261108-0",
               "image": "ami-0981c553bb713ac28"
@@ -985,6 +989,10 @@
             "mx-central-1": {
               "release": "10.2.20261108-0",
               "image": "ami-040b82c5a9c36bff6"
+            },
+            "me-west-1": {
+              "release": "10.2.20261108-0",
+              "image": "ami-0050b26fd99f480b2"
             },
             "sa-east-1": {
               "release": "10.2.20261108-0",
